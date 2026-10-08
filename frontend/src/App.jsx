@@ -5,7 +5,7 @@ import DiaperLog from './components/DiaperLog'
 import SleepLog from './components/SleepLog'
 import MilkStorage from './components/MilkStorage'
 import FeedingAnalytics from './components/FeedingAnalytics'
-import { authApi, getStoredToken, setStoredToken } from './api'
+import { authApi, babyApi, getStoredToken, setStoredToken } from './api'
 import { getBabyProfile, saveBabyProfile, calculateBabyAge } from './mockData/babyProfile'
 
 const TABS = [
@@ -31,6 +31,31 @@ export default function App() {
   const [editWeight, setEditWeight] = useState(String(babyProfile.weightKg))
 
   const babyAge = calculateBabyAge(babyProfile.birthday)
+
+  // 跨设备同步：获取云端共享的宝宝档案
+  useEffect(() => {
+    if (!isAuthed) return
+    babyApi.getProfile()
+      .then(serverProfile => {
+        if (serverProfile) {
+          const synced = {
+            name: serverProfile.name || '悠悠',
+            gender: serverProfile.gender || 'girl',
+            birthday: serverProfile.birthday || '2026-08-24',
+            weightKg: (serverProfile.weight_kg !== undefined && serverProfile.weight_kg !== null)
+              ? serverProfile.weight_kg 
+              : 4.6,
+            headCircumferenceCm: serverProfile.head_circumference_cm,
+            heightCm: serverProfile.height_cm,
+          }
+          setBabyProfile(synced)
+          saveBabyProfile(synced)
+        }
+      })
+      .catch(err => {
+        console.warn('获取云端宝宝档案失败，使用本地缓存:', err)
+      })
+  }, [isAuthed])
 
   // 监听来自 API 层的未授权事件（例如口令在服务端被重置）
   useEffect(() => {
@@ -70,7 +95,7 @@ export default function App() {
     }
   }
 
-  function handleSaveProfile(e) {
+  async function handleSaveProfile(e) {
     e.preventDefault()
     const newProfile = {
       ...babyProfile,
@@ -78,9 +103,24 @@ export default function App() {
       birthday: editBirthday,
       weightKg: parseFloat(editWeight) || 4.5,
     }
+    // 本地优先响应并缓存
     setBabyProfile(newProfile)
     saveBabyProfile(newProfile)
     setShowProfileModal(false)
+
+    // 跨设备云端持久化
+    try {
+      await babyApi.updateProfile({
+        name: newProfile.name,
+        gender: newProfile.gender || 'girl',
+        birthday: newProfile.birthday,
+        weight_kg: newProfile.weightKg,
+        head_circumference_cm: newProfile.headCircumferenceCm,
+        height_cm: newProfile.heightCm,
+      })
+    } catch (err) {
+      console.error('同步宝宝档案到云端失败:', err)
+    }
   }
 
   // ===== 未登录：显示访问门禁卡片 =====

@@ -242,6 +242,20 @@ def remove_pump(log_id: int, db: Session = Depends(get_db)):
     return {"ok": True}
 
 
+# ===================== 宝宝档案（跨设备共享） =====================
+
+@api.get("/baby/profile", response_model=schemas.BabyProfileResponse, tags=["宝宝档案"])
+def get_baby_profile(db: Session = Depends(get_db)):
+    """获取宝宝档案（跨设备共享）"""
+    return crud.get_baby_profile(db)
+
+
+@api.put("/baby/profile", response_model=schemas.BabyProfileResponse, tags=["宝宝档案"])
+def update_baby_profile(data: schemas.BabyProfileBase, db: Session = Depends(get_db)):
+    """更新宝宝档案（跨设备共享）"""
+    return crud.update_baby_profile(db, data)
+
+
 # 挂载受保护的 API
 app.include_router(api)
 

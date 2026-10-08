@@ -122,3 +122,21 @@ class MilkStats(BaseModel):
     room_total_ml: float
     expiring_soon_count: int    # 24小时内到期
     expired_count: int
+
+
+# ===== 宝宝档案 =====
+class BabyProfileBase(BaseModel):
+    name: str
+    gender: Optional[str] = "girl"
+    birthday: str
+    weight_kg: float
+    head_circumference_cm: Optional[float] = None
+    height_cm: Optional[float] = None
+
+
+class BabyProfileResponse(BabyProfileBase):
+    id: int
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True

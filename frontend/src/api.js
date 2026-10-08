@@ -112,3 +112,9 @@ export const milkApi = {
   addPump: (data) => request('/milk/pump', { method: 'POST', body: JSON.stringify(data) }),
   removePump: (id) => request(`/milk/pump/${id}`, { method: 'DELETE' }),
 }
+
+// ===== 宝宝档案（跨设备共享） =====
+export const babyApi = {
+  getProfile: () => request('/baby/profile'),
+  updateProfile: (data) => request('/baby/profile', { method: 'PUT', body: JSON.stringify(data) }),
+}

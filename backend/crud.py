@@ -333,3 +333,33 @@ def delete_pump_log(db: Session, log_id: int) -> bool:
     db.delete(log)
     db.commit()
     return True
+
+
+# ===================== 宝宝档案（跨设备共享） =====================
+
+def get_baby_profile(db: Session) -> models.BabyProfile:
+    profile = db.query(models.BabyProfile).first()
+    if not profile:
+        default_bday = (get_beijing_now() - timedelta(days=45)).strftime("%Y-%m-%d")
+        profile = models.BabyProfile(
+            name="悠悠",
+            gender="girl",
+            birthday=default_bday,
+            weight_kg=4.6,
+            updated_at=get_beijing_now(),
+        )
+        db.add(profile)
+        db.commit()
+        db.refresh(profile)
+    return profile
+
+
+def update_baby_profile(db: Session, data: schemas.BabyProfileBase) -> models.BabyProfile:
+    profile = get_baby_profile(db)
+    for field, value in data.model_dump().items():
+        if value is not None:
+            setattr(profile, field, value)
+    profile.updated_at = get_beijing_now()
+    db.commit()
+    db.refresh(profile)
+    return profile

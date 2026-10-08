@@ -77,3 +77,17 @@ class PumpLog(Base):
     pump_time = Column(DateTime, default=get_beijing_now)
     note = Column(Text, default="")
     created_at = Column(DateTime, default=get_beijing_now)
+
+
+class BabyProfile(Base):
+    """宝宝档案（多设备实时共享）"""
+    __tablename__ = "baby_profile"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(50), default="悠悠")
+    gender = Column(String(10), default="girl")           # boy | girl
+    birthday = Column(String(20), default="2026-08-24")   # YYYY-MM-DD
+    weight_kg = Column(Float, default=4.6)               # 体重 kg
+    head_circumference_cm = Column(Float, nullable=True)
+    height_cm = Column(Float, nullable=True)
+    updated_at = Column(DateTime, default=get_beijing_now)
