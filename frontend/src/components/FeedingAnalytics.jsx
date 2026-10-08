@@ -1,24 +1,64 @@
 import { useState, useMemo } from 'react'
-import { generateFeedingMockData, HOURLY_FEEDING_DISTRIBUTION, getFeedingInsights } from '../mockData/feedingAnalyticsMock'
+import {
+  SCENARIO_TYPES,
+  generateFeedingMockData,
+  getHourlyDistribution,
+  evaluateFeedingScenario,
+} from '../mockData/feedingAnalyticsMock'
 
 export default function FeedingAnalytics() {
+  const [selectedScenario, setSelectedScenario] = useState('steady')
   const [periodDays, setPeriodDays] = useState(14)
   const [chartMetric, setChartMetric] = useState('count') // 'count' | 'bottle'
   const [selectedDayIndex, setSelectedDayIndex] = useState(null)
 
-  // 根据选定天数生成模拟数据
-  const daysData = useMemo(() => generateFeedingMockData(periodDays), [periodDays])
-  const insights = useMemo(() => getFeedingInsights(daysData), [daysData])
+  // 根据选定场景和天数动态生成历史数据与智能推导报告
+  const daysData = useMemo(
+    () => generateFeedingMockData(periodDays, selectedScenario),
+    [periodDays, selectedScenario]
+  )
+
+  const hourlyData = useMemo(
+    () => getHourlyDistribution(selectedScenario),
+    [selectedScenario]
+  )
+
+  const analysis = useMemo(
+    () => evaluateFeedingScenario(daysData, selectedScenario),
+    [daysData, selectedScenario]
+  )
 
   const maxDailyCount = useMemo(() => Math.max(...daysData.map(d => d.totalFeeds), 10), [daysData])
   const maxDailyBottle = useMemo(() => Math.max(...daysData.map(d => d.bottleAmount), 500), [daysData])
-  const maxHourlyCount = useMemo(() => Math.max(...HOURLY_FEEDING_DISTRIBUTION.map(d => d.count)), [])
+  const maxHourlyCount = useMemo(() => Math.max(...hourlyData.map(d => d.count)), [hourlyData])
 
   // 默认选中最后一天（今天）
   const activeDay = selectedDayIndex !== null ? daysData[selectedDayIndex] : daysData[daysData.length - 1]
 
   return (
     <div className="analytics-page">
+      {/* 场景模拟切换器 */}
+      <div className="card scenario-selector-card">
+        <div className="scenario-header">
+          <span className="scenario-label">🎯 喂养场景模拟演示：</span>
+          <span className="scenario-hint">点击体验不同喂养状态下的动态建议</span>
+        </div>
+        <div className="scenario-pills">
+          {SCENARIO_TYPES.map(sc => (
+            <button
+              key={sc.id}
+              className={`scenario-pill ${selectedScenario === sc.id ? 'active' : ''}`}
+              onClick={() => {
+                setSelectedScenario(sc.id)
+                setSelectedDayIndex(null)
+              }}
+            >
+              {sc.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* 周期筛选 */}
       <div className="period-tabs">
         <button
@@ -45,46 +85,56 @@ export default function FeedingAnalytics() {
       <div className="analytics-kpi-grid">
         <div className="kpi-card">
           <div className="kpi-icon">🍼</div>
-          <div className="kpi-value">{insights.avgDailyFeeds} <span className="kpi-unit">次/天</span></div>
+          <div className="kpi-value">{analysis.avgDailyFeeds} <span className="kpi-unit">次/天</span></div>
           <div className="kpi-title">日均喂奶频次</div>
-          <div className="kpi-sub">单次吃奶更饱满稳定</div>
+          <div className="kpi-sub">
+            {selectedScenario === 'cluster_feeding' ? '密集挂喂激增' : selectedScenario === 'frequent_night' ? '夜间频次过高' : '单次吃奶更稳定'}
+          </div>
         </div>
 
         <div className="kpi-card">
           <div className="kpi-icon">⏱</div>
-          <div className="kpi-value">{insights.avgInterval} <span className="kpi-unit">小时</span></div>
+          <div className="kpi-value">{analysis.avgInterval} <span className="kpi-unit">小时</span></div>
           <div className="kpi-title">平均进食间隔</div>
-          <div className="kpi-sub">最长夜间拉长至 {insights.maxNightInterval}h</div>
+          <div className="kpi-sub">最长夜间拉长至 {analysis.maxNightInterval}h</div>
         </div>
 
         <div className="kpi-card">
           <div className="kpi-icon">🌙</div>
-          <div className="kpi-value">{insights.avgNightFeeds} <span className="kpi-unit">次/夜</span></div>
+          <div className="kpi-value">{analysis.avgNightFeeds} <span className="kpi-unit">次/夜</span></div>
           <div className="kpi-title">平均夜奶次数</div>
           <div className="kpi-sub">22:00 - 06:00 期间</div>
         </div>
 
         <div className="kpi-card">
           <div className="kpi-icon">🥛</div>
-          <div className="kpi-value">{insights.avgBottle} <span className="kpi-unit">ml/天</span></div>
+          <div className="kpi-value">{analysis.avgBottle} <span className="kpi-unit">ml/天</span></div>
           <div className="kpi-title">奶瓶摄入量</div>
-          <div className="kpi-sub">+ 亲喂均 {insights.avgBreastMins} 分钟</div>
+          <div className="kpi-sub">+ 亲喂均 {analysis.avgBreastMins} 分钟</div>
         </div>
       </div>
 
-      {/* 综合健康与规律度评分 */}
+      {/* 综合健康与规律度评分（动态计算） */}
       <div className="card score-card">
         <div className="score-left">
-          <div className="score-circle">
-            <span className="score-num">{insights.regularityScore}</span>
+          <div
+            className="score-circle"
+            style={{
+              background:
+                analysis.regularityScore >= 85
+                  ? 'linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)'
+                  : analysis.regularityScore >= 70
+                  ? 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)'
+                  : 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+            }}
+          >
+            <span className="score-num">{analysis.regularityScore}</span>
             <span className="score-label">规律指数</span>
           </div>
         </div>
         <div className="score-right">
-          <div className="score-title">宝宝近期喂养规律良好 🌟</div>
-          <div className="score-desc">
-            喂养间隔逐步规律在 3 小时左右，夜奶频次呈平稳递减趋势，生长能量摄入充足。
-          </div>
+          <div className="score-title">{analysis.diagnosisTitle}</div>
+          <div className="score-desc">{analysis.diagnosisDesc}</div>
         </div>
       </div>
 
@@ -182,16 +232,32 @@ export default function FeedingAnalytics() {
           <div className="card-title">☀️ 昼夜喂养分布</div>
           <div className="progress-split-wrap">
             <div className="progress-split-bar">
-              <div className="split-day" style={{ width: '79%' }}>79%</div>
-              <div className="split-night" style={{ width: '21%' }}>21%</div>
+              <div
+                className="split-day"
+                style={{
+                  width: selectedScenario === 'frequent_night' ? '60%' : '79%',
+                }}
+              >
+                {selectedScenario === 'frequent_night' ? '60%' : '79%'}
+              </div>
+              <div
+                className="split-night"
+                style={{
+                  width: selectedScenario === 'frequent_night' ? '40%' : '21%',
+                }}
+              >
+                {selectedScenario === 'frequent_night' ? '40%' : '21%'}
+              </div>
             </div>
             <div className="split-labels">
-              <span style={{ color: '#4a9eff' }}>☀️ 白天 79% (均5.8次)</span>
-              <span style={{ color: '#9b59b6' }}>🌙 夜间 21% (均1.5次)</span>
+              <span style={{ color: '#4a9eff' }}>☀️ 白天 ({selectedScenario === 'frequent_night' ? '60%' : '79%'})</span>
+              <span style={{ color: '#9b59b6' }}>🌙 夜间 ({selectedScenario === 'frequent_night' ? '40%' : '21%'})</span>
             </div>
           </div>
           <div className="sub-tip-text">
-            夜奶占比适度，宝宝正在建立清晰的昼夜节律。
+            {selectedScenario === 'frequent_night'
+              ? '⚠️ 夜间吃奶频次过高，昼夜节律有颠倒倾向。'
+              : '夜奶占比处于健康递减区间，昼夜节律发展良好。'}
           </div>
         </div>
 
@@ -200,16 +266,18 @@ export default function FeedingAnalytics() {
           <div className="card-title">🤱 母乳左右侧平衡</div>
           <div className="progress-split-wrap">
             <div className="progress-split-bar">
-              <div className="split-left" style={{ width: `${insights.leftPct}%` }}>{insights.leftPct}%</div>
-              <div className="split-right" style={{ width: `${insights.rightPct}%` }}>{insights.rightPct}%</div>
+              <div className="split-left" style={{ width: `${analysis.leftPct}%` }}>{analysis.leftPct}%</div>
+              <div className="split-right" style={{ width: `${analysis.rightPct}%` }}>{analysis.rightPct}%</div>
             </div>
             <div className="split-labels">
-              <span style={{ color: '#e8789e' }}>左侧 {insights.leftPct}%</span>
-              <span style={{ color: '#f39c12' }}>右侧 {insights.rightPct}%</span>
+              <span style={{ color: '#e8789e' }}>左侧 {analysis.leftPct}%</span>
+              <span style={{ color: '#f39c12' }}>右侧 {analysis.rightPct}%</span>
             </div>
           </div>
           <div className="sub-tip-text">
-            左右侧进食时长基本均衡（偏差 &lt; 5%），有效促进对称泌乳。
+            {Math.abs(analysis.leftPct - analysis.rightPct) > 20
+              ? '⚠️ 偏侧较为严重（相差>20%），需注意预防单侧堵奶与大小胸。'
+              : '左右侧进食时长基本均衡，有效促进对称泌乳。'}
           </div>
         </div>
       </div>
@@ -222,7 +290,7 @@ export default function FeedingAnalytics() {
         </p>
 
         <div className="hourly-chart">
-          {HOURLY_FEEDING_DISTRIBUTION.map((item) => {
+          {hourlyData.map((item) => {
             const hPct = (item.count / maxHourlyCount) * 100
             return (
               <div key={item.hour} className="hourly-col">
@@ -241,43 +309,29 @@ export default function FeedingAnalytics() {
         </div>
 
         <div className="tip-text" style={{ marginTop: 10 }}>
-          💡 <strong>密集喂哺期 (Cluster Feeding)</strong>：傍晚 <strong>18:00 - 20:00</strong> 吃奶频次最高，属于婴儿傍晚储能以准备夜间睡眠的自然生理现象。
+          {selectedScenario === 'cluster_feeding' ? (
+            <>⚡️ <strong>密集挂喂峰值</strong>：傍晚 <strong>18:00 - 20:00</strong> 吃奶频次激增至高峰，系典型的新生儿傍晚储能生理行为。</>
+          ) : selectedScenario === 'frequent_night' ? (
+            <>🌙 <strong>夜间时段警示</strong>：午夜至凌晨 <strong>00:00 - 04:00</strong> 进食高峰未落，说明夜间觉醒过密。</>
+          ) : (
+            <>💡 <strong>作息规律平稳</strong>：白天餐次均匀分布，傍晚 <strong>18:00 - 20:00</strong> 微峰储能准备入睡。</>
+          )}
         </div>
       </div>
 
-      {/* 专家 / 智能育儿建议报告 */}
+      {/* 动态场景专属喂养建议报告 */}
       <div className="card insights-card">
-        <div className="card-title">📋 喂养分析与护理建议</div>
+        <div className="card-title">📋 针对当前喂养场景的智能护理建议</div>
 
-        <div className="insight-item">
-          <div className="insight-icon">🌙</div>
-          <div className="insight-content">
-            <div className="insight-item-title">夜间睡眠拉长信号</div>
-            <div className="insight-item-desc">
-              近两周最长进食间隔稳定达到 <strong>{insights.maxNightInterval} 小时</strong>。宝宝夜间深睡眠正在发展，若无特殊医疗需求，夜间无需刻意唤醒喂养。
+        {analysis.recommendations.map((rec, rIdx) => (
+          <div className="insight-item" key={rIdx}>
+            <div className="insight-icon">{rec.icon}</div>
+            <div className="insight-content">
+              <div className="insight-item-title">{rec.title}</div>
+              <div className="insight-item-desc">{rec.desc}</div>
             </div>
           </div>
-        </div>
-
-        <div className="insight-item">
-          <div className="insight-icon">⚖️</div>
-          <div className="insight-content">
-            <div className="insight-item-title">双侧亲喂保持均衡</div>
-            <div className="insight-item-desc">
-              左右亲喂比例为 <strong>{insights.leftPct}% vs {insights.rightPct}%</strong>。每次喂哺建议交替先喂一侧，继续保持当前喂养节奏。
-            </div>
-          </div>
-        </div>
-
-        <div className="insight-item">
-          <div className="insight-icon">🍼</div>
-          <div className="insight-content">
-            <div className="insight-item-title">摄入总量稳步达标</div>
-            <div className="insight-item-desc">
-              日均综合奶量在 <strong>650ml ~ 750ml</strong> 之间波动，配合每日换尿布频次（&gt;6次），表明宝宝水分与热量供给十分充沛。
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   )

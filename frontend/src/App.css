@@ -699,6 +699,64 @@ body {
   gap: 12px;
 }
 
+.scenario-selector-card {
+  background: linear-gradient(135deg, #fff7fa 0%, #f3f8fe 100%);
+  border: 1.5px solid #f8d5e5;
+  padding: 12px 14px;
+}
+
+.scenario-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.scenario-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.scenario-hint {
+  font-size: 11px;
+  color: var(--primary-dark);
+}
+
+.scenario-pills {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.scenario-pill {
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.scenario-pill:active {
+  transform: scale(0.96);
+}
+
+.scenario-pill.active {
+  background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 3px 8px rgba(248, 164, 200, 0.4);
+}
+
 .period-tabs {
   display: flex;
   background: white;
