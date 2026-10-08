@@ -595,3 +595,99 @@ body {
   border-radius: 8px;
   margin-top: 8px;
 }
+
+/* ===== 登录与鉴权门禁 ===== */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: linear-gradient(145deg, #fff5f8 0%, #eef5fc 100%);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 360px;
+  background: white;
+  border-radius: 24px;
+  padding: 32px 24px;
+  box-shadow: 0 10px 30px rgba(248, 164, 200, 0.25);
+  border: 1px solid var(--border);
+  text-align: center;
+}
+
+.login-logo {
+  font-size: 54px;
+  margin-bottom: 12px;
+  animation: float 2.5s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.login-card h2 {
+  font-size: 20px;
+  font-weight: 800;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.login-desc {
+  font-size: 13px;
+  color: var(--text-light);
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.login-desc span {
+  font-size: 11px;
+  color: #b0a4aa;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+.login-input {
+  text-align: center;
+  font-size: 16px;
+  letter-spacing: 2px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 15px;
+  border-radius: 12px;
+}
+
+.login-error {
+  background: #ffebee;
+  color: #d32f2f;
+  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.lock-btn {
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 16px;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: all 0.2s;
+}
+
+.lock-btn:active {
+  background: rgba(255, 255, 255, 0.4);
+}

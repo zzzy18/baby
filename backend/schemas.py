@@ -6,6 +6,11 @@ from typing import Optional
 from pydantic import BaseModel
 
 
+# ===== 鉴权请求 =====
+class LoginRequest(BaseModel):
+    access_code: str
+
+
 # ===== 喂奶记录 =====
 class FeedingLogCreate(BaseModel):
     feed_type: str          # breast | bottle

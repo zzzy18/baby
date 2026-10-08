@@ -1,22 +1,68 @@
 /**
- * API 服务层：统一管理所有后端请求
+ * API 服务层：统一管理所有后端请求，并自动附加设备本地持久化 Token
  */
 
-// 如果未配置环境变量，本地开发默认 http://localhost:8000，同域部署时可为空字符串
+// 如果未配置环境变量，本地开发默认 http://localhost:8000，同域部署时为空字符串
 const BASE_URL = import.meta.env.VITE_API_BASE_URL !== undefined 
   ? import.meta.env.VITE_API_BASE_URL 
   : (window.location.hostname === 'localhost' ? 'http://localhost:8000' : '')
 
+export const TOKEN_STORAGE_KEY = 'baby_access_token'
+
+export function getStoredToken() {
+  return localStorage.getItem(TOKEN_STORAGE_KEY) || ''
+}
+
+export function setStoredToken(token) {
+  if (token) {
+    localStorage.setItem(TOKEN_STORAGE_KEY, token)
+  } else {
+    localStorage.removeItem(TOKEN_STORAGE_KEY)
+  }
+}
+
 async function request(path, options = {}) {
+  const token = getStoredToken()
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    ...(options.headers || {}),
+  }
+
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
     ...options,
+    headers,
   })
+
+  if (res.status === 401) {
+    // 触发全局未授权事件，自动弹出输入密码界面
+    window.dispatchEvent(new CustomEvent('baby-auth-unauthorized'))
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.detail || '访问口令未验证或已失效')
+  }
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
     throw new Error(err.detail || `请求失败 ${res.status}`)
   }
+
   return res.json()
+}
+
+// ===== 登录与鉴权 =====
+export const authApi = {
+  login: async (accessCode) => {
+    const data = await request('/api/login', {
+      method: 'POST',
+      body: JSON.stringify({ access_code: accessCode }),
+    })
+    if (data.token) {
+      setStoredToken(data.token)
+    }
+    return data
+  },
+  verify: () => request('/api/verify'),
+  logout: () => setStoredToken(''),
 }
 
 // ===== 喂奶记录 =====
