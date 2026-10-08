@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { feedingApi } from '../api'
 import { getBeijingNowString, formatClock, formatRelativeTime } from '../dateUtils'
+import { getBabyProfile, calculateBabyAge, getRecommendedFeedingMetrics } from '../mockData/babyProfile'
 
 export default function FeedingLog({ onGoAnalytics }) {
   const [logs, setLogs] = useState([])
@@ -13,6 +14,14 @@ export default function FeedingLog({ onGoAnalytics }) {
   const [amount, setAmount] = useState('')
   const [feedTime, setFeedTime] = useState(getBeijingNowString)
   const [saving, setSaving] = useState(false)
+
+  // 宝宝档案与月龄/体重生理参数推算
+  const babyProfile = useMemo(() => getBabyProfile(), [])
+  const babyAge = useMemo(() => calculateBabyAge(babyProfile.birthday), [babyProfile])
+  const metrics = useMemo(
+    () => getRecommendedFeedingMetrics(babyProfile.weightKg, babyAge.totalDays),
+    [babyProfile, babyAge]
+  )
 
   const load = useCallback(async () => {
     try {
@@ -69,19 +78,47 @@ export default function FeedingLog({ onGoAnalytics }) {
     }
   }
 
+  // 计算今日已喝奶瓶总量
+  const todayBottleTotal = useMemo(() => {
+    return logs
+      .filter(l => l.feed_type === 'bottle' && l.amount_ml)
+      .reduce((acc, cur) => acc + (cur.amount_ml || 0), 0)
+  }, [logs])
+
+  const intakePercent = Math.min(100, Math.round((todayBottleTotal / metrics.standardDaily) * 100))
+
   const minsSince = stats.mins_since_last
   const sinceStr = minsSince == null ? '--'
     : minsSince >= 60 ? `${Math.floor(minsSince / 60)}h${minsSince % 60}m`
     : `${minsSince}m`
 
+  const parsedAmount = parseFloat(amount) || 0
+  const isAmountOver = parsedAmount > metrics.maxPerFeed * 1.35
+  const isAmountUnder = parsedAmount > 0 && parsedAmount < metrics.minPerFeed * 0.6
+  const parsedDuration = parseInt(duration) || 0
+  const isDurationOver = parsedDuration > 35
+
   return (
     <div>
+      {/* 宝宝月龄与体重信息卡片 */}
+      <div className="baby-profile-bar">
+        <div className="profile-bar-avatar">👶</div>
+        <div className="profile-bar-info">
+          <div className="profile-bar-name">
+            <strong>{babyProfile.name}</strong> · {babyAge.ageText}
+          </div>
+          <div className="profile-bar-sub">
+            当前体重 <strong>{babyProfile.weightKg} kg</strong> · 每日推荐奶量 <strong>{metrics.minDaily}-{metrics.standardDaily} ml</strong>
+          </div>
+        </div>
+      </div>
+
       {/* 今日统计（北京时间 0点-24点） */}
       <div className="stats-row">
         <div className="stat-card">
           <div className="stat-value">{stats.today_count}</div>
           <div className="stat-label">今日喂奶 (0-24点)</div>
-          <div className="stat-unit">次</div>
+          <div className="stat-unit">次 · 建议{metrics.suggestedFrequency}</div>
         </div>
         <div className="stat-card">
           <div className="stat-value">{stats.avg_interval_hours ?? '--'}</div>
@@ -95,6 +132,23 @@ export default function FeedingLog({ onGoAnalytics }) {
         </div>
       </div>
 
+      {/* 今日奶量目标完成度 */}
+      <div className="card intake-progress-card">
+        <div className="intake-progress-header">
+          <span>🍼 今日奶瓶摄入：<strong>{todayBottleTotal} ml</strong></span>
+          <span className="intake-target">体重基准线: {metrics.standardDaily} ml ({intakePercent}%)</span>
+        </div>
+        <div className="progress-bar">
+          <div
+            className="progress-fill"
+            style={{
+              width: `${intakePercent}%`,
+              background: intakePercent >= 90 ? '#2ecc71' : 'linear-gradient(90deg, #fbc2eb 0%, #a6c1ee 100%)',
+            }}
+          ></div>
+        </div>
+      </div>
+
       {/* 近期深度喂养报告入口 */}
       {onGoAnalytics && (
         <div className="analytics-banner" onClick={onGoAnalytics}>
@@ -102,7 +156,7 @@ export default function FeedingLog({ onGoAnalytics }) {
             <span className="banner-icon">📊</span>
             <div>
               <div className="banner-title">近期宝宝喂养多维分析报告</div>
-              <div className="banner-sub">查看近7/14/30天喂哺趋势、昼夜节律与规律度</div>
+              <div className="banner-sub">结合 {babyProfile.weightKg}kg 体重与月龄对比 WHO 生长曲线标准</div>
             </div>
           </div>
           <span className="banner-arrow">➔</span>
@@ -170,13 +224,20 @@ export default function FeedingLog({ onGoAnalytics }) {
         </div>
       )}
 
-      {/* 弹窗 */}
+      {/* 弹窗：深度融合宝宝月龄与体重参数 */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <div className="modal-title">{feedType === 'breast' ? '🤱 母乳记录' : '🍼 奶瓶记录'}</div>
               <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
+            </div>
+
+            {/* 月龄体重上下文标签 */}
+            <div className="modal-baby-context">
+              <span>👶 {babyProfile.name}</span>
+              <span>📅 {babyAge.ageText}</span>
+              <span>⚖️ {babyProfile.weightKg} kg</span>
             </div>
 
             <div className="toggle-group">
@@ -202,13 +263,76 @@ export default function FeedingLog({ onGoAnalytics }) {
 
             {feedType === 'breast' ? (
               <div className="form-group">
-                <label className="form-label">时长（分钟）</label>
-                <input type="number" className="form-input" placeholder="例如：15" value={duration} onChange={e => setDuration(e.target.value)} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label className="form-label" style={{ margin: 0 }}>时长（分钟）</label>
+                  <span style={{ fontSize: 11, color: 'var(--primary-dark)' }}>
+                    建议单侧：{metrics.recommendedBreastMins}
+                  </span>
+                </div>
+                <input
+                  type="number"
+                  className="form-input"
+                  placeholder="例如：15"
+                  value={duration}
+                  onChange={e => setDuration(e.target.value)}
+                />
+                {/* 快速时长胶囊 */}
+                <div className="quick-chips">
+                  {[10, 15, 20, 25, 30].map(mins => (
+                    <button
+                      key={mins}
+                      type="button"
+                      className="chip-btn"
+                      onClick={() => setDuration(String(mins))}
+                    >
+                      {mins}分
+                    </button>
+                  ))}
+                </div>
+                {isDurationOver && (
+                  <div className="modal-warning-tip">
+                    ⚠️ 单侧亲喂超过 35 分钟，可能存在含乳较浅、无效吞咽或单纯哄睡，建议注意乳头保护并防疲劳。
+                  </div>
+                )}
               </div>
             ) : (
               <div className="form-group">
-                <label className="form-label">奶量（ml）</label>
-                <input type="number" className="form-input" placeholder="例如：80" value={amount} onChange={e => setAmount(e.target.value)} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label className="form-label" style={{ margin: 0 }}>奶量（ml）</label>
+                  <span style={{ fontSize: 11, color: '#4a9eff' }}>
+                    单次建议参考：{metrics.minPerFeed} ~ {metrics.maxPerFeed} ml
+                  </span>
+                </div>
+                <input
+                  type="number"
+                  className="form-input"
+                  placeholder={`参考区间 ${metrics.minPerFeed}-${metrics.maxPerFeed}`}
+                  value={amount}
+                  onChange={e => setAmount(e.target.value)}
+                />
+                {/* 快速容量胶囊 */}
+                <div className="quick-chips">
+                  {[60, 80, 100, 120, 140, 160].map(ml => (
+                    <button
+                      key={ml}
+                      type="button"
+                      className={`chip-btn ${parsedAmount === ml ? 'active' : ''}`}
+                      onClick={() => setAmount(String(ml))}
+                    >
+                      {ml}ml
+                    </button>
+                  ))}
+                </div>
+                {isAmountOver && (
+                  <div className="modal-warning-tip">
+                    ⚠️ 输入奶量 ({parsedAmount}ml) 高出当前月龄单餐胃容量参考上限 ({metrics.maxPerFeed}ml)，注意喂后充分竖抱拍嗝，警惕过度喂养与吐奶。
+                  </div>
+                )}
+                {isAmountUnder && (
+                  <div className="modal-warning-tip" style={{ color: '#e67e22', background: '#fff8f0' }}>
+                    💡 单次奶量偏少，可能属于加餐或零食奶，注意观察宝宝是否在 1.5 小时内再次频繁索食。
+                  </div>
+                )}
               </div>
             )}
 

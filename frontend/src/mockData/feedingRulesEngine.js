@@ -180,37 +180,59 @@ export function evaluateDeepClinicalRules(features) {
     })
   }
 
-  // ================= 规则 5：摄入总量与水分排泄充足度验证 =================
+  // ================= 规则 5：摄入总量与月龄体重标准对齐 =================
+  const targetStandard = Math.round(features.weightKg * 150)
+  const minStandard = Math.round(features.weightKg * 120)
+  const maxStandard = Math.round(features.weightKg * 160)
+
+  let adequacyLevel = 'green'
+  let adequacyTitle = `摄入量与 ${features.weightKg}kg 体重完美契合 (120-150ml/kg 黄金区间)`
+  let adequacyLevelText = '✓ 供给充足'
+  let adequacyDesc = `宝宝当前生后 ${features.totalDays} 天、体重 ${features.weightKg} kg。日均奶量 ${features.avgBottle} ml，位于体重推荐区间 (${minStandard} - ${targetStandard} ml)。`
+
+  if (features.avgBottle < minStandard && features.avgDailyFeeds < 6) {
+    adequacyLevel = 'orange'
+    adequacyLevelText = '⚠️ 摄入偏低'
+    adequacyTitle = `摄入量低于体重健康基准线 (${minStandard}ml)`
+    adequacyDesc = `当前日均仅 ${features.avgBottle} ml，低于当前体重最低推荐线 (${minStandard}ml，即 120ml/kg)。需密切观察排尿量（湿尿布是否≥6片）并评估是否需要积极追奶。`
+  } else if (features.avgBottle > maxStandard) {
+    adequacyLevel = 'yellow'
+    adequacyLevelText = '⚠️ 警惕过量'
+    adequacyTitle = `摄入量高于体重标准需求 (${maxStandard}ml)`
+    adequacyDesc = `当前日均达 ${features.avgBottle} ml，超出体重标准上限。瓶喂时警惕因奶嘴流速过快导致吞咽不自主过度喂养，加重婴儿胃肠负担。`
+  }
+
   evaluations.push({
-    id: 'intake_adequacy',
-    domain: '生长发育与充沛度',
-    level: 'green',
-    levelText: '✓ 供给充足',
-    title: '全天综合能量与水分储备达标',
-    phenomenon: `日均进食频次 ${features.avgDailyFeeds} 次，奶瓶均量 ${features.avgBottle} ml + 亲喂 ${features.avgBreastMins} 分钟。`,
-    medicalMechanism: '摄入热量与基础代谢率相契合，结合每日正常排泄（湿尿布>6片），能够提供每公斤体重约 100-120 kcal 的健康生长能量。',
+    id: 'intake_adequacy_by_weight',
+    domain: '月龄体重与摄入',
+    level: adequacyLevel,
+    levelText: adequacyLevelText,
+    title: adequacyTitle,
+    phenomenon: adequacyDesc,
+    medicalMechanism: `根据 WHO 与 AAP 婴儿营养标准，小婴儿能量消耗约为 100-120 kcal/kg/day，对应奶量为 120-150 ml/kg/day。胃容量随着日龄自核桃大小逐步扩展至拳头大小。`,
     actionPlan: [
-      '监测体重增长曲线：每周固定时间称量净重，新生儿期每周增重 150-200g 属黄金标准。',
-      '观察进食满足感：吃完后表情放松、双拳自然松开、能安睡 2-3 小时即为饱腹标志。',
+      `定期跟踪体重曲线：每周同一时间裸重称量，当前月龄每周健康增重基准为 150-200g。`,
+      `双向观察饱腹信号：吃饱后松拳、推开奶嘴、安睡 2-3 小时；避免用吃奶作为唯一哭闹抚平手段。`,
+      `排泄交叉验证：每天保证 5-6 片沉甸甸的湿尿布即可确认水分热量充足，不必为单次少喝 10ml 焦虑。`,
     ],
-    dos: ['结合尿布与体重曲线综合观察', '喂后保持 15 分钟半直立拍嗝'],
-    donts: ['仅凭奶瓶刻度盲目焦虑强喂'],
+    dos: [`按 ${features.weightKg}kg 体重标准科学评估每日摄入`, '观察精神状态与排尿尿色（清亮淡黄为佳）'],
+    donts: ['死搬硬套刻度强行逼喂', '单次奶量盲目加量超过当前胃容量'],
   })
 
   return evaluations
 }
 
-// 高级场景特征抽取器
-export function extractClinicalFeatures(daysData, scenario = 'steady') {
-  const totalDays = daysData.length
+// 高级场景特征抽取器（已注入月龄天数与当前体重）
+export function extractClinicalFeatures(daysData, scenario = 'steady', weightKg = 4.6, totalDays = 45) {
+  const totalDaysCount = daysData.length
   const totalFeeds = daysData.reduce((acc, d) => acc + d.totalFeeds, 0)
-  const avgDailyFeeds = Number((totalFeeds / totalDays).toFixed(1))
+  const avgDailyFeeds = Number((totalFeeds / totalDaysCount).toFixed(1))
 
   const totalBottle = daysData.reduce((acc, d) => acc + d.bottleAmount, 0)
-  const avgBottle = Math.round(totalBottle / totalDays)
+  const avgBottle = Math.round(totalBottle / totalDaysCount)
 
   const totalBreastMins = daysData.reduce((acc, d) => acc + d.breastDuration, 0)
-  const avgBreastMins = Math.round(totalBreastMins / totalDays)
+  const avgBreastMins = Math.round(totalBreastMins / totalDaysCount)
   const avgBreastMinsPerFeed = Math.round(avgBreastMins / Math.max(1, avgDailyFeeds))
 
   const totalLeft = daysData.reduce((acc, d) => acc + d.breastLeft, 0)
@@ -220,10 +242,10 @@ export function extractClinicalFeatures(daysData, scenario = 'steady') {
   const rightPct = 100 - leftPct
 
   const totalNight = daysData.reduce((acc, d) => acc + d.nightFeeds, 0)
-  const nightFeedCount = Number((totalNight / totalDays).toFixed(1))
+  const nightFeedCount = Number((totalNight / totalDaysCount).toFixed(1))
   const nightRatio = Number((totalNight / Math.max(1, totalFeeds)).toFixed(2))
 
-  const avgInterval = Number((daysData.reduce((acc, d) => acc + d.avgInterval, 0) / totalDays).toFixed(1))
+  const avgInterval = Number((daysData.reduce((acc, d) => acc + d.avgInterval, 0) / totalDaysCount).toFixed(1))
   const longestStretchHours = Number(Math.max(...daysData.map(d => d.maxInterval)).toFixed(1))
 
   const clusterDetected = scenario === 'cluster_feeding'
@@ -231,6 +253,8 @@ export function extractClinicalFeatures(daysData, scenario = 'steady') {
   const hasClusterColicAlert = scenario === 'cluster_feeding'
 
   return {
+    weightKg: parseFloat(weightKg) || 4.6,
+    totalDays: parseInt(totalDays) || 45,
     avgDailyFeeds,
     avgBottle,
     avgBreastMins,

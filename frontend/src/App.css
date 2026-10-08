@@ -1566,3 +1566,159 @@ body {
 .donts-box li {
   color: #991b1b;
 }
+
+/* ===== 宝宝月龄体重档案栏与胶囊 ===== */
+.baby-profile-pill {
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 16px;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.baby-profile-pill:active {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.baby-profile-bar {
+  background: linear-gradient(135deg, #fff2f8 0%, #f0f7ff 100%);
+  border: 1px solid #f6d4e5;
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.profile-bar-avatar {
+  font-size: 26px;
+  background: white;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(248, 164, 200, 0.25);
+  flex-shrink: 0;
+}
+
+.profile-bar-info {
+  flex: 1;
+}
+
+.profile-bar-name {
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.profile-bar-name strong {
+  font-size: 14px;
+  color: var(--primary-dark);
+}
+
+.profile-bar-sub {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-top: 2px;
+}
+
+.profile-bar-sub strong {
+  color: var(--text);
+}
+
+/* 今日摄入量完成度进度条 */
+.intake-progress-card {
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.intake-progress-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.intake-target {
+  font-size: 11px;
+  color: var(--primary-dark);
+  font-weight: 600;
+}
+
+/* 弹窗中的月龄体重上下文标签 */
+.modal-baby-context {
+  display: flex;
+  gap: 8px;
+  background: #fdf5f9;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  color: var(--primary-dark);
+  font-weight: 600;
+  margin-bottom: 12px;
+  justify-content: center;
+}
+
+/* 快速选择胶囊 */
+.quick-chips {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.chip-btn {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--text-light);
+  transition: all 0.15s;
+}
+
+.chip-btn.active, .chip-btn:hover {
+  background: white;
+  border-color: var(--primary-dark);
+  color: var(--primary-dark);
+}
+
+.modal-warning-tip {
+  font-size: 11px;
+  line-height: 1.4;
+  color: #c0392b;
+  background: #fdf2f2;
+  border-left: 3px solid #e74c3c;
+  padding: 6px 8px;
+  border-radius: 6px;
+  margin-top: 6px;
+}
+
+/* 分析页顶部的月龄体重对照横幅 */
+.analytics-profile-context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  background: white;
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  color: var(--text);
+}
+
+.context-item strong {
+  color: var(--primary-dark);
+}

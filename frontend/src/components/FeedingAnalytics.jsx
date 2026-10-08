@@ -10,7 +10,10 @@ import {
   evaluateDeepClinicalRules,
 } from '../mockData/feedingRulesEngine'
 
-export default function FeedingAnalytics() {
+export default function FeedingAnalytics({ babyProfile, babyAge }) {
+  const profile = babyProfile || { name: '悠悠', weightKg: 4.6, birthday: '2026-08-24' }
+  const age = babyAge || { ageText: '生后 45 天', totalDays: 45 }
+
   const [selectedScenario, setSelectedScenario] = useState('steady')
   const [periodDays, setPeriodDays] = useState(14)
   const [chartMetric, setChartMetric] = useState('count') // 'count' | 'bottle'
@@ -23,10 +26,10 @@ export default function FeedingAnalytics() {
     [periodDays, selectedScenario]
   )
 
-  // 2. 抽取多维临床特征
+  // 2. 抽取多维临床特征（深度融入宝宝体重与月龄）
   const features = useMemo(
-    () => extractClinicalFeatures(daysData, selectedScenario),
-    [daysData, selectedScenario]
+    () => extractClinicalFeatures(daysData, selectedScenario, profile.weightKg, age.totalDays),
+    [daysData, selectedScenario, profile.weightKg, age.totalDays]
   )
 
   // 3. 计算 5 维加权健康评分
@@ -88,6 +91,13 @@ export default function FeedingAnalytics() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* 宝宝月龄体重基准横幅 */}
+      <div className="analytics-profile-context">
+        <div className="context-item">👶 <strong>{profile.name}</strong> · {age.ageText}</div>
+        <div className="context-item">⚖️ 体重 <strong>{profile.weightKg} kg</strong></div>
+        <div className="context-item">🥛 目标摄入：<strong>{Math.round(profile.weightKg * 120)} ~ {Math.round(profile.weightKg * 150)} ml/天</strong></div>
       </div>
 
       {/* 周期筛选 */}
@@ -227,7 +237,9 @@ export default function FeedingAnalytics() {
           <div className="kpi-icon">🥛</div>
           <div className="kpi-value">{features.avgBottle} <span className="kpi-unit">ml/天</span></div>
           <div className="kpi-title">奶瓶摄入量</div>
-          <div className="kpi-sub">+ 亲喂均 {features.avgBreastMins} 分钟</div>
+          <div className="kpi-sub">
+            基准 {Math.round(profile.weightKg * 150)}ml (达成{Math.round((features.avgBottle / Math.max(1, profile.weightKg * 150)) * 100)}%)
+          </div>
         </div>
       </div>
 
