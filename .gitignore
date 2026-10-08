@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+backend/venv/
+backend/env/
+venv/
+env/
+
+# Python cache & artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+
+# SQLite databases & logs
+*.db
+*.sqlite
+*.sqlite3
+backend/baby.db
+*.log
+
+# Build outputs
+frontend/dist/
+backend/dist/
+dist/
+
+# Deployment & sensitive temporary scripts
+deploy*.py
+sync*.py
+test_ports.py
+test_beijing_api.py
+check_ports.py
+verify_service.py
+*.tar.gz
+
+# Environment variables
+.env
+.env.local
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
