@@ -1250,3 +1250,319 @@ body {
   font-weight: 700;
   color: var(--primary-dark);
 }
+
+/* ===== 5维健康评分矩阵卡片 ===== */
+.score-matrix-card {
+  background: linear-gradient(135deg, #ffffff 0%, #fdf8fb 100%);
+  border: 1.5px solid #f6dbe8;
+  padding: 16px;
+}
+
+.matrix-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.matrix-circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4px 14px rgba(248, 164, 200, 0.45);
+  flex-shrink: 0;
+}
+
+.matrix-num {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.matrix-label {
+  font-size: 9px;
+  opacity: 0.95;
+  margin-top: 2px;
+}
+
+.matrix-summary {
+  flex: 1;
+}
+
+.matrix-status-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.matrix-status-sub {
+  font-size: 11px;
+  color: var(--text-light);
+  line-height: 1.4;
+}
+
+.dimensions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+  background: var(--bg);
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.dimension-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dim-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text);
+}
+
+.dim-header strong {
+  color: var(--primary-dark);
+  font-weight: 700;
+}
+
+.dim-bar {
+  height: 6px;
+  background: #eee;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.dim-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+/* ===== 深度临床评估报告模块 ===== */
+.clinical-reports-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reports-section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section-main-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.domain-filters {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.domain-filter-btn {
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.domain-filter-btn.active {
+  background: var(--text);
+  color: white;
+  border-color: var(--text);
+}
+
+.clinical-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.clinical-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 16px 14px;
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.clinical-card.border-green { border-left: 5px solid #2ecc71; }
+.clinical-card.border-yellow { border-left: 5px solid #f39c12; }
+.clinical-card.border-orange { border-left: 5px solid #e67e22; }
+.clinical-card.border-red { border-left: 5px solid #e74c3c; }
+
+.clinical-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.clinical-domain-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-light);
+  background: var(--bg);
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.clinical-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.clinical-block {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.block-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-light);
+}
+
+.block-content {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.phenomenon-text {
+  background: #f8fafc;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border-left: 3px solid #94a3b8;
+}
+
+.mechanism-text {
+  background: #fdf6ec;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border-left: 3px solid #f39c12;
+  color: #7c4a03;
+}
+
+/* 3步行动方案清单 */
+.action-step-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.action-step-item {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text);
+  background: #f0fdf4;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #dcfce7;
+}
+
+.step-num {
+  background: #22c55e;
+  color: white;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* 宜忌清单 */
+.dos-donts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.dos-box {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.donts-box {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.dos-header {
+  font-size: 11px;
+  font-weight: 700;
+  color: #15803d;
+  margin-bottom: 4px;
+}
+
+.donts-header {
+  font-size: 11px;
+  font-weight: 700;
+  color: #b91c1c;
+  margin-bottom: 4px;
+}
+
+.dos-box ul, .donts-box ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.dos-box li {
+  color: #166534;
+}
+
+.donts-box li {
+  color: #991b1b;
+}
