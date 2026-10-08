@@ -4,6 +4,7 @@ import FeedingLog from './components/FeedingLog'
 import DiaperLog from './components/DiaperLog'
 import SleepLog from './components/SleepLog'
 import MilkStorage from './components/MilkStorage'
+import FeedingAnalytics from './components/FeedingAnalytics'
 import { authApi, getStoredToken, setStoredToken } from './api'
 
 const TABS = [
@@ -11,6 +12,7 @@ const TABS = [
   { key: 'diaper', label: '尿布', icon: '💧', title: '换尿布', subtitle: '记录大小便情况' },
   { key: 'sleep', label: '睡眠', icon: '😴', title: '睡眠记录', subtitle: '分析宝宝睡眠规律' },
   { key: 'milk', label: '母乳', icon: '🥛', title: '母乳存储', subtitle: '管理库存与有效期' },
+  { key: 'analytics', label: '统计', icon: '📊', title: '喂养多维分析', subtitle: '多维度洞察宝宝近期饮食规律' },
 ]
 
 export default function App() {
@@ -98,10 +100,11 @@ export default function App() {
 
   function renderContent() {
     switch (activeTab) {
-      case 'feeding': return <FeedingLog />
+      case 'feeding': return <FeedingLog onGoAnalytics={() => setActiveTab('analytics')} />
       case 'diaper': return <DiaperLog />
       case 'sleep': return <SleepLog />
       case 'milk': return <MilkStorage />
+      case 'analytics': return <FeedingAnalytics />
       default: return null
     }
   }

@@ -691,3 +691,504 @@ body {
 .lock-btn:active {
   background: rgba(255, 255, 255, 0.4);
 }
+
+/* ===== 喂养多维度统计分析模块 ===== */
+.analytics-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.period-tabs {
+  display: flex;
+  background: white;
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  gap: 4px;
+}
+
+.period-btn {
+  flex: 1;
+  border: none;
+  background: none;
+  padding: 8px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-light);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.period-btn.active {
+  background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(248, 164, 200, 0.35);
+}
+
+.analytics-kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.kpi-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 12px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.kpi-icon {
+  font-size: 20px;
+  margin-bottom: 6px;
+}
+
+.kpi-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.1;
+}
+
+.kpi-unit {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-light);
+}
+
+.kpi-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 4px;
+}
+
+.kpi-sub {
+  font-size: 10px;
+  color: var(--text-light);
+  margin-top: 3px;
+}
+
+/* 规律度评分卡片 */
+.score-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(135deg, #fff9fb 0%, #f6f9fe 100%);
+}
+
+.score-left {
+  flex-shrink: 0;
+}
+
+.score-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4px 12px rgba(248, 164, 200, 0.4);
+}
+
+.score-num {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.score-label {
+  font-size: 9px;
+  opacity: 0.9;
+  margin-top: 2px;
+}
+
+.score-right {
+  flex: 1;
+}
+
+.score-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.score-desc {
+  font-size: 12px;
+  color: var(--text-light);
+  line-height: 1.45;
+}
+
+/* 趋势图表区 */
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.metric-toggle {
+  display: flex;
+  background: var(--bg);
+  padding: 2px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.metric-btn {
+  border: none;
+  background: none;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-light);
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.metric-btn.active {
+  background: white;
+  color: var(--primary-dark);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.chart-legend {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--text-light);
+  margin-bottom: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.dot-day { background: #a1c4fd; }
+.dot-night { background: #c29ffd; }
+.dot-bottle { background: #84fab0; }
+.dot-breast { background: #fbc2eb; }
+
+/* 柱状滚动视图 */
+.analytics-bars-container {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 120px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+}
+
+.analytics-bar-col {
+  flex: 1;
+  min-width: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.analytics-bar-col.selected .analytics-bar-date {
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+.analytics-bar-col.selected .analytics-bar-wrapper {
+  transform: scaleY(1.05);
+}
+
+.analytics-bar-wrapper {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.analytics-bar {
+  width: 14px;
+  border-radius: 4px 4px 0 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 6px;
+}
+
+.analytics-bar.single {
+  background: linear-gradient(180deg, #84fab0 0%, #8fd3f4 100%);
+}
+
+.analytics-bar.stacked {
+  background: #f0e0e8;
+}
+
+.bar-part-night {
+  width: 100%;
+  background: #c29ffd;
+}
+
+.bar-part-day {
+  width: 100%;
+  background: #a1c4fd;
+}
+
+.analytics-bar-date {
+  font-size: 10px;
+  color: var(--text-light);
+  margin-top: 6px;
+  white-space: nowrap;
+}
+
+/* 选中详情条 */
+.active-day-detail {
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+}
+
+.active-day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.active-day-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.active-day-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 10px;
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.active-day-metrics strong {
+  color: var(--text);
+}
+
+/* 左右双列图 */
+.two-col-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.progress-split-wrap {
+  margin: 10px 0 6px;
+}
+
+.progress-split-bar {
+  height: 22px;
+  border-radius: 11px;
+  overflow: hidden;
+  display: flex;
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+  text-align: center;
+  line-height: 22px;
+}
+
+.split-day { background: #4a9eff; }
+.split-night { background: #9b59b6; }
+.split-left { background: #f8a4c8; }
+.split-right { background: #f39c12; }
+
+.split-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.sub-tip-text {
+  font-size: 11px;
+  color: var(--text-light);
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+/* 24小时时段生物钟 */
+.hourly-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 90px;
+  margin-top: 10px;
+}
+
+.hourly-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.hourly-bar-wrap {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.hourly-bar {
+  width: 100%;
+  max-width: 18px;
+  border-radius: 4px 4px 0 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 2px;
+}
+
+.hourly-bar.day { background: #a1c4fd; }
+.hourly-bar.night { background: #dcd0ff; }
+.hourly-bar.highlight {
+  background: linear-gradient(180deg, #ff9a9e 0%, #fecfef 100%);
+}
+
+.hourly-count {
+  font-size: 9px;
+  color: white;
+  font-weight: 700;
+  line-height: 1;
+  transform: scale(0.85);
+}
+
+.hourly-time {
+  font-size: 8px;
+  color: var(--text-light);
+  margin-top: 4px;
+  white-space: nowrap;
+  transform: scale(0.9);
+}
+
+/* 深度建议卡片 */
+.insights-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.insight-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.insight-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.insight-content {
+  flex: 1;
+}
+
+.insight-item-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.insight-item-desc {
+  font-size: 12px;
+  color: var(--text-light);
+  line-height: 1.45;
+}
+
+.insight-item-desc strong {
+  color: var(--primary-dark);
+}
+
+/* 喂养报告快捷横幅 */
+.analytics-banner {
+  background: linear-gradient(135deg, #fff2f7 0%, #eef5fc 100%);
+  border: 1.5px solid #f6d1e4;
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.analytics-banner:active {
+  transform: scale(0.98);
+}
+
+.banner-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.banner-icon {
+  font-size: 20px;
+  background: white;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(248, 164, 200, 0.2);
+  flex-shrink: 0;
+}
+
+.banner-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.banner-sub {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-top: 2px;
+}
+
+.banner-arrow {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary-dark);
+}

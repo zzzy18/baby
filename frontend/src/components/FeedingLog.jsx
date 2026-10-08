@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { feedingApi } from '../api'
 import { getBeijingNowString, formatClock, formatRelativeTime } from '../dateUtils'
 
-export default function FeedingLog() {
+export default function FeedingLog({ onGoAnalytics }) {
   const [logs, setLogs] = useState([])
   const [stats, setStats] = useState({ today_count: 0, avg_interval_hours: null, mins_since_last: null })
   const [loading, setLoading] = useState(true)
@@ -94,6 +94,20 @@ export default function FeedingLog() {
           <div className="stat-unit">已过去</div>
         </div>
       </div>
+
+      {/* 近期深度喂养报告入口 */}
+      {onGoAnalytics && (
+        <div className="analytics-banner" onClick={onGoAnalytics}>
+          <div className="banner-left">
+            <span className="banner-icon">📊</span>
+            <div>
+              <div className="banner-title">近期宝宝喂养多维分析报告</div>
+              <div className="banner-sub">查看近7/14/30天喂哺趋势、昼夜节律与规律度</div>
+            </div>
+          </div>
+          <span className="banner-arrow">➔</span>
+        </div>
+      )}
 
       {/* 快速记录 */}
       <div className="quick-btn-grid">
