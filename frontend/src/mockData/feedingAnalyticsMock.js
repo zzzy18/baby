@@ -2,13 +2,14 @@
  * 近期宝宝喂养多维场景模拟数据与智能推荐引擎
  */
 
-// 场景预设定义
+// 场景预设定义（置顶宝宝真实实测数据，并提供儿科标准与典型生理场景作为对照）
 export const SCENARIO_TYPES = [
-  { id: 'steady', label: '🌟 标准平稳型', desc: '昼夜节律良好，生长稳健' },
-  { id: 'frequent_night', label: '🌙 夜奶频繁型', desc: '夜醒频繁，起夜负担重' },
-  { id: 'breast_imbalance', label: '⚖️ 亲喂单侧失衡', desc: '单侧偏好明显，防大小胸堵奶' },
-  { id: 'cluster_feeding', label: '⚡️ 猛长密集期', desc: '傍晚集中挂喂，频繁储能' },
-  { id: 'snack_feeding', label: '🍼 零食奶少食多餐', desc: '吃几口就睡，后奶摄入不足' },
+  { id: 'real', label: '🌟 宝宝真实数据 (实测分析)', desc: '基于最近打卡记录医学推算' },
+  { id: 'steady', label: '🎯 标准平稳型 (医学基准)', desc: '昼夜节律良好，生长稳健' },
+  { id: 'cluster_feeding', label: '⚡️ 猛长密集期 (对照)', desc: '傍晚集中挂喂，频繁储能' },
+  { id: 'frequent_night', label: '🌙 夜奶频繁型 (对照)', desc: '夜醒频繁，起夜负担重' },
+  { id: 'breast_imbalance', label: '⚖️ 亲喂单侧失衡 (对照)', desc: '单侧偏好明显，防大小胸堵奶' },
+  { id: 'snack_feeding', label: '🍼 零食奶少餐 (对照)', desc: '吃几口就睡，后奶摄入不足' },
 ]
 
 // 根据场景与天数动态生成历史数据
@@ -316,4 +317,241 @@ export function evaluateFeedingScenario(daysData, scenarioId = 'steady') {
     diagnosisDesc,
     recommendations,
   }
+}
+
+/**
+ * 聚合真实喂奶日志 (按自然天划分，支持 7/14/30 天周期)
+ */
+export function aggregateRealFeedingLogs(logs = [], days = 14) {
+  const result = []
+  const today = new Date()
+  const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+
+  // 解析并规范化所有日志
+  const parsedLogs = (logs || []).map(log => {
+    let hour = 12
+    let fullDate = ''
+    try {
+      if (log.feed_time) {
+        const parts = log.feed_time.split(/[T ]/)
+        fullDate = parts[0]
+        if (parts[1]) {
+          hour = parseInt(parts[1].split(':')[0], 10) || 0
+        }
+      }
+    } catch (e) {}
+    return {
+      ...log,
+      fullDate,
+      hour,
+      feedTimeMs: log.feed_time ? new Date(log.feed_time.replace(' ', 'T')).getTime() : 0,
+    }
+  })
+
+  // 按天生成最近 N 天完整时间序列
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(d.getDate() - i)
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const dayNum = String(d.getDate()).padStart(2, '0')
+    const fullDate = `${y}-${m}-${dayNum}`
+    const dateStr = `${d.getMonth() + 1}/${d.getDate()}`
+    const dayName = i === 0 ? '今天' : i === 1 ? '昨天' : weekDays[d.getDay()]
+
+    const dayLogs = parsedLogs.filter(l => l.fullDate === fullDate)
+    const totalFeeds = dayLogs.length
+    const dayFeeds = dayLogs.filter(l => l.hour >= 6 && l.hour < 22).length
+    const nightFeeds = dayLogs.filter(l => l.hour < 6 || l.hour >= 22).length
+
+    let bottleAmount = 0
+    let breastMinsLeft = 0
+    let breastMinsRight = 0
+
+    dayLogs.forEach(l => {
+      if (l.feed_type === 'bottle') {
+        bottleAmount += (parseFloat(l.amount_ml) || 0)
+      } else if (l.feed_type === 'breast') {
+        const mins = parseInt(l.duration_mins) || 0
+        if (l.side === '左侧') {
+          breastMinsLeft += mins
+        } else if (l.side === '右侧') {
+          breastMinsRight += mins
+        } else {
+          breastMinsLeft += Math.round(mins / 2)
+          breastMinsRight += Math.round(mins / 2)
+        }
+      }
+    })
+
+    // 进食间隔统计
+    let avgInterval = 3.0
+    let maxInterval = 3.5
+    if (dayLogs.length >= 2) {
+      const sorted = [...dayLogs].sort((a, b) => a.feedTimeMs - b.feedTimeMs)
+      const intervals = []
+      for (let j = 0; j < sorted.length - 1; j++) {
+        const diffHrs = Math.max(0.5, (sorted[j + 1].feedTimeMs - sorted[j].feedTimeMs) / (1000 * 60 * 60))
+        intervals.push(diffHrs)
+      }
+      if (intervals.length > 0) {
+        avgInterval = Number((intervals.reduce((a, b) => a + b, 0) / intervals.length).toFixed(1))
+        maxInterval = Number(Math.max(...intervals).toFixed(1))
+      }
+    } else if (dayLogs.length === 0) {
+      avgInterval = 0
+      maxInterval = 0
+    }
+
+    result.push({
+      date: dateStr,
+      dayName,
+      fullDate,
+      totalFeeds,
+      dayFeeds,
+      nightFeeds,
+      bottleAmount: Math.round(bottleAmount),
+      breastDuration: breastMinsLeft + breastMinsRight,
+      breastLeft: breastMinsLeft,
+      breastRight: breastMinsRight,
+      avgInterval,
+      maxInterval,
+      isRealDay: totalFeeds > 0,
+    })
+  }
+
+  const validDaysCount = result.filter(d => d.totalFeeds > 0).length
+  const totalFeedsCount = result.reduce((acc, d) => acc + d.totalFeeds, 0)
+
+  return {
+    daysData: result,
+    realLogsCount: parsedLogs.length,
+    validDaysCount,
+    hasRealData: totalFeedsCount > 0,
+  }
+}
+
+/**
+ * 统计真实打卡数据的 24 小时生物钟时段分布
+ */
+export function getRealHourlyDistribution(logs = []) {
+  const buckets = [
+    { hour: '00-02', label: '午夜', isNight: true, count: 0 },
+    { hour: '02-04', label: '凌晨', isNight: true, count: 0 },
+    { hour: '04-06', label: '拂晓', isNight: true, count: 0 },
+    { hour: '06-08', label: '早晨', isNight: false, count: 0 },
+    { hour: '08-10', label: '上午', isNight: false, count: 0 },
+    { hour: '10-12', label: '中午前', isNight: false, count: 0 },
+    { hour: '12-14', label: '午后', isNight: false, count: 0 },
+    { hour: '14-16', label: '下午', isNight: false, count: 0 },
+    { hour: '16-18', label: '傍晚', isNight: false, count: 0 },
+    { hour: '18-20', label: '晚间', isNight: false, count: 0 },
+    { hour: '20-22', label: '睡前', isNight: false, count: 0 },
+    { hour: '22-24', label: '夜初', isNight: true, count: 0 },
+  ]
+
+  ;(logs || []).forEach(log => {
+    try {
+      if (log.feed_time) {
+        const parts = log.feed_time.split(/[T ]/)
+        if (parts[1]) {
+          const h = parseInt(parts[1].split(':')[0], 10) || 0
+          const bIdx = Math.min(11, Math.floor(h / 2))
+          buckets[bIdx].count += 1
+        }
+      }
+    } catch (e) {}
+  })
+
+  const maxCount = Math.max(...buckets.map(b => b.count), 1)
+  return buckets.map(b => ({
+    ...b,
+    highlight: b.count >= maxCount && b.count > 0,
+  }))
+}
+
+/**
+ * 智能评估：比对真实数据与 5 大经典临床场景的吻合度
+ */
+export function matchScenarioSimilarity(features) {
+  if (!features || features.avgDailyFeeds === 0) {
+    return {
+      bestMatchId: 'steady',
+      label: '标准平稳型 (医学基准)',
+      similarity: 90,
+      reason: '尚未积累打卡数据，以儿科标准平稳型作为基准对标参考。',
+    }
+  }
+
+  const diffLeftRight = Math.abs(features.leftPct - features.rightPct)
+  if (diffLeftRight >= 22) {
+    return {
+      bestMatchId: 'breast_imbalance',
+      label: '亲喂单侧失衡',
+      similarity: 88,
+      reason: `双侧偏侧差达 ${diffLeftRight}%，提示宝宝存在单侧乳房偏好。`,
+    }
+  }
+
+  if (features.nightFeedCount >= 3.5 || features.nightRatio > 0.35) {
+    return {
+      bestMatchId: 'frequent_night',
+      label: '夜奶频繁型',
+      similarity: 86,
+      reason: `夜奶高达 ${features.nightFeedCount} 次，夜间进食占比达 ${Math.round(features.nightRatio * 100)}%，夜醒较为破碎。`,
+    }
+  }
+
+  if (features.avgDailyFeeds >= 9 && features.avgInterval <= 2.2) {
+    return {
+      bestMatchId: 'cluster_feeding',
+      label: '猛长密集期',
+      similarity: 85,
+      reason: `日均喂养高达 ${features.avgDailyFeeds} 次且间隔紧凑，符合猛长期储能或集群挂喂特征。`,
+    }
+  }
+
+  if (features.avgBreastMinsPerFeed <= 10 && features.avgDailyFeeds >= 7) {
+    return {
+      bestMatchId: 'snack_feeding',
+      label: '零食奶少食多餐',
+      similarity: 82,
+      reason: `单次亲喂偏短（约 ${features.avgBreastMinsPerFeed} 分钟），提示进食零碎可能后奶摄入不足。`,
+    }
+  }
+
+  return {
+    bestMatchId: 'steady',
+    label: '标准平稳型',
+    similarity: 92,
+    reason: `日均喂奶 ${features.avgDailyFeeds} 次，进食间隔约 ${features.avgInterval}h，昼夜节律与生长摄入平稳。`,
+  }
+}
+
+/**
+ * 一键生成近7天标准示范真实打卡记录（存入云端数据库）
+ */
+export function generateDemoFeedingRecords(weightKg = 4.65) {
+  const records = []
+  const today = new Date()
+  const singleBottleMl = Math.round(weightKg * 25) // ~115ml
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(d.getDate() - i)
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const dayStr = String(d.getDate()).padStart(2, '0')
+    const datePrefix = `${y}-${m}-${dayStr}`
+
+    records.push(
+      { feed_type: 'breast', side: '左侧', duration_mins: 15, amount_ml: null, feed_time: `${datePrefix} 03:30:00`, note: '夜奶轻拍安睡' },
+      { feed_type: 'breast', side: '右侧', duration_mins: 18, amount_ml: null, feed_time: `${datePrefix} 07:15:00`, note: '晨起第一餐' },
+      { feed_type: 'bottle', side: null, duration_mins: null, amount_ml: singleBottleMl, feed_time: `${datePrefix} 10:45:00`, note: '母乳瓶喂' },
+      { feed_type: 'breast', side: '左侧', duration_mins: 16, amount_ml: null, feed_time: `${datePrefix} 14:20:00`, note: '午后亲喂' },
+      { feed_type: 'bottle', side: null, duration_mins: null, amount_ml: singleBottleMl + 10, feed_time: `${datePrefix} 18:30:00`, note: '傍晚储能' },
+      { feed_type: 'bottle', side: null, duration_mins: null, amount_ml: singleBottleMl, feed_time: `${datePrefix} 22:00:00`, note: '睡前充能大餐' },
+    )
+  }
+  return records
 }

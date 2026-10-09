@@ -224,15 +224,19 @@ export function evaluateDeepClinicalRules(features) {
 
 // 高级场景特征抽取器（已注入月龄天数与当前体重）
 export function extractClinicalFeatures(daysData, scenario = 'steady', weightKg = 4.6, totalDays = 45) {
-  const totalDaysCount = daysData.length
+  const totalDaysCount = daysData.length || 1
+  const validDays = (daysData || []).filter(d => d.totalFeeds > 0)
+  // 若是真实数据，优先按有效打卡天数计算日均，避免未打卡天数稀释真实均值
+  const effectiveDaysCount = (scenario === 'real' && validDays.length > 0) ? validDays.length : totalDaysCount
+
   const totalFeeds = daysData.reduce((acc, d) => acc + d.totalFeeds, 0)
-  const avgDailyFeeds = Number((totalFeeds / totalDaysCount).toFixed(1))
+  const avgDailyFeeds = Number((totalFeeds / effectiveDaysCount).toFixed(1))
 
   const totalBottle = daysData.reduce((acc, d) => acc + d.bottleAmount, 0)
-  const avgBottle = Math.round(totalBottle / totalDaysCount)
+  const avgBottle = Math.round(totalBottle / effectiveDaysCount)
 
   const totalBreastMins = daysData.reduce((acc, d) => acc + d.breastDuration, 0)
-  const avgBreastMins = Math.round(totalBreastMins / totalDaysCount)
+  const avgBreastMins = Math.round(totalBreastMins / effectiveDaysCount)
   const avgBreastMinsPerFeed = Math.round(avgBreastMins / Math.max(1, avgDailyFeeds))
 
   const totalLeft = daysData.reduce((acc, d) => acc + d.breastLeft, 0)
@@ -242,15 +246,17 @@ export function extractClinicalFeatures(daysData, scenario = 'steady', weightKg 
   const rightPct = 100 - leftPct
 
   const totalNight = daysData.reduce((acc, d) => acc + d.nightFeeds, 0)
-  const nightFeedCount = Number((totalNight / totalDaysCount).toFixed(1))
+  const nightFeedCount = Number((totalNight / effectiveDaysCount).toFixed(1))
   const nightRatio = Number((totalNight / Math.max(1, totalFeeds)).toFixed(2))
 
-  const avgInterval = Number((daysData.reduce((acc, d) => acc + d.avgInterval, 0) / totalDaysCount).toFixed(1))
-  const longestStretchHours = Number(Math.max(...daysData.map(d => d.maxInterval)).toFixed(1))
+  const activeIntervalDays = (scenario === 'real' && validDays.length > 0) ? validDays : daysData
+  const avgInterval = Number((activeIntervalDays.reduce((acc, d) => acc + (d.avgInterval || 3.0), 0) / Math.max(1, activeIntervalDays.length)).toFixed(1))
+  const longestStretchHours = Number(Math.max(...daysData.map(d => d.maxInterval || 3.0)).toFixed(1))
 
-  const clusterDetected = scenario === 'cluster_feeding'
-  const singleFeedEfficiency = scenario === 'snack_feeding' ? 'snack' : 'optimal'
-  const hasClusterColicAlert = scenario === 'cluster_feeding'
+  const isReal = scenario === 'real'
+  const clusterDetected = isReal ? (avgDailyFeeds >= 9 && avgInterval <= 2.2) : (scenario === 'cluster_feeding')
+  const singleFeedEfficiency = isReal ? (avgBreastMinsPerFeed < 10 && avgDailyFeeds >= 8 ? 'snack' : 'optimal') : (scenario === 'snack_feeding' ? 'snack' : 'optimal')
+  const hasClusterColicAlert = isReal ? (clusterDetected && nightRatio > 0.3) : (scenario === 'cluster_feeding')
 
   return {
     weightKg: parseFloat(weightKg) || 4.6,
@@ -268,5 +274,8 @@ export function extractClinicalFeatures(daysData, scenario = 'steady', weightKg 
     clusterDetected,
     singleFeedEfficiency,
     hasClusterColicAlert,
+    isReal,
+    hasRealData: totalFeeds > 0,
+    validDaysCount: validDays.length,
   }
 }

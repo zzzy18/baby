@@ -954,6 +954,279 @@ body {
   overflow-x: auto;
   padding-bottom: 6px;
   margin-bottom: 10px;
+  position: relative;
+}
+
+/* 儿科基准参考虚线 & 宝宝实测线 */
+.chart-benchmark-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 2px dashed #ff6b8b;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.benchmark-line-badge {
+  position: absolute;
+  right: 4px;
+  top: -11px;
+  background: #ff6b8b;
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+}
+
+.chart-real-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 2px dashed #4a9eff;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.real-line-badge {
+  position: absolute;
+  left: 4px;
+  top: -11px;
+  background: #4a9eff;
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+}
+
+.legend-line {
+  display: inline-block;
+  width: 14px;
+  height: 0;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.legend-line.line-benchmark {
+  border-top: 2px dashed #ff6b8b;
+}
+
+.legend-line.line-real {
+  border-top: 2px dashed #4a9eff;
+}
+
+/* 真实数据同步状态条 */
+.real-sync-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #555;
+  background: #fdf6fa;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #f7dfec;
+}
+
+.btn-link-sm {
+  background: none;
+  border: none;
+  color: var(--primary-dark);
+  font-weight: 700;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* 场景模式下的对比参照提示条 */
+.scenario-comparison-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff8eb;
+  border: 1px solid #ffe1a6;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #8a5316;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scenario-comparison-banner .banner-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-pill-sm {
+  background: white;
+  border: 1px solid #e2ad68;
+  color: #8a5316;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-pill-sm:active {
+  background: #fde8c8;
+}
+
+/* 真实数据待打卡引导卡片 */
+.real-data-prompt-card {
+  background: linear-gradient(135deg, #fff9fb 0%, #f4f8fe 100%);
+  border: 1.5px dashed #f6b5d3;
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.prompt-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.prompt-badge {
+  background: #ffe3ee;
+  color: var(--primary-dark);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.prompt-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.prompt-desc {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.prompt-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* 真实数据 vs 儿科临床基准 对比看板 */
+.comparison-board-card {
+  background: white;
+  border: 1.5px solid #f3d4e4;
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: var(--shadow);
+}
+
+.board-header {
+  margin-bottom: 10px;
+}
+
+.board-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.board-subtitle {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-top: 2px;
+}
+
+.scenario-match-badge {
+  background: #f4f8fe;
+  border: 1px solid #cbe0fe;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #2d5ca8;
+}
+
+.match-tag {
+  font-weight: 700;
+  color: #1e4f9b;
+  margin-bottom: 2px;
+}
+
+.match-reason {
+  display: block;
+  font-size: 11px;
+  color: #5879b0;
+  margin-top: 2px;
+}
+
+.comparison-table {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.comp-row {
+  display: grid;
+  grid-template-columns: 1.3fr 1.1fr 1.2fr 1.4fr;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fafbfc;
+  border: 1px solid var(--border);
+  font-size: 12px;
+  min-width: 420px;
+}
+
+.comp-header-row {
+  background: #fdf5f9;
+  border-color: #f7d6e6;
+  font-weight: 700;
+  color: var(--text-light);
+  font-size: 11px;
+  padding: 6px 10px;
+}
+
+.col-metric {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.metric-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.metric-hint {
+  font-size: 10px;
+  color: var(--text-light);
+  font-weight: normal;
+}
+
+.real-val {
+  color: var(--primary-dark);
+  font-weight: 800;
+}
+
+.real-sub {
+  font-size: 10px;
+  color: var(--text-light);
 }
 
 .analytics-bar-col {

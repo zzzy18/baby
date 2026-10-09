@@ -179,6 +179,7 @@ export default function App() {
             key={babyProfile.weightKg + babyProfile.birthday}
             babyProfile={babyProfile}
             babyAge={babyAge}
+            onGoFeeding={() => setActiveTab('feeding')}
           />
         )
       default: return null
